@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { getDb, saveSetting } = require('../Api/database.js');
+const { saveSetting } = require('../Api/database.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

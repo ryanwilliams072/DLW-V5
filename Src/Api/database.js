@@ -21,26 +21,40 @@ const saveSetting = async (settingName, settingValue) => {
     }
     const settings = await db.get('settings') || {};
 
-    if (Object.values(settings).find((setting) => setting.name === settingName)) {
-        throw new Error(`Setting with name ${settingName} already exists`);
+    const existingSetting = Object.values(settings).find((setting) => setting.name === settingName);
+
+    if (existingSetting) {
+        existingSetting.id = settingValue;
+        await db.set('settings', settings);
+
+        const universeEmbed = new EmbedBuilder()
+            .setTitle('Setting Overwritten')
+            .setDescription(`Overwrote **${settingName}** in the database`)
+            .setColor('#2f3136')
+            .addFields(
+                { name: 'Setting', value: settingName, inline: true },
+                { name: 'New Value', value: settingValue, inline: true },
+            )
+            .setTimestamp();
+
+        return universeEmbed;
+    } else {
+        settings[uuidv4()] = { name: settingName, id: settingValue };
+        await db.set('settings', settings);
+
+        const universeEmbed = new EmbedBuilder()
+            .setTitle('Setting Added')
+            .setDescription(`Added **${settingName}** to the database`)
+            .setColor('#2f3136')
+            .addFields(
+                { name: 'Setting', value: settingName, inline: true },
+                { name: 'Value', value: settingValue, inline: true },
+            )
+            .setTimestamp();
+
+        return universeEmbed;
     }
-
-    settings[settingValue] = { name: settingName, id: settingValue };
-    await db.set('settings', settings);
-    console.log(`Saved setting ${settingName} with value ${settingValue}`);
-
-    const universeEmbed = new EmbedBuilder()
-        .setTitle('Setting Added')
-        .setDescription(`Added **${settingName}** to the database`)
-        .setColor('#2f3136')
-        .addFields(
-            { name: 'Setting', value: settingName, inline: true },
-            { name: 'Value', value: settingValue, inline: true },
-        )
-        .setTimestamp();
-
-    return universeEmbed;
-}
+};
 
 const getDataKey = async (key) => {
     if (!db) {
@@ -93,6 +107,16 @@ const returnUniverses = async () => {
 const listUniverses = async (db) => {
     const universes = await db.get('universes') || {};
     const universeList = Object.values(universes);
+
+    if (universeList.length === 0) {
+        const emptyEmbed = new EmbedBuilder()
+            .setTitle('Universes')
+            .setDescription('No universes found')
+            .setColor('#5dca83')
+            .setTimestamp();
+
+        return emptyEmbed;
+    }
 
     const universeEmbed = new EmbedBuilder()
         .setTitle('Universes')
