@@ -27,21 +27,18 @@ module.exports = {
             return;
         }
 
+        let settingEmbed;
         if (module === 'db') {
-            await saveSetting('datastoreApiKey', dbkey);
-
-            interaction.reply({
-                embeds: [saveSetting],
-                ephemeral: true
-            });
+            settingEmbed = await saveSetting('datastoreApiKey', dbkey);
         } else if (module === 'logchan'){
-            await saveSetting('logChannelID', dbkey);
-
-            interaction.reply({
-                embeds: [saveSetting],
-                ephemeral: true
-            });
+            settingEmbed = await saveSetting('logChannelID', dbkey);
+        } else {
+            return console.log('Error: No module selected');
         }
-        return console.log('Error: No module selected');
+
+        interaction.reply({
+            embeds: [settingEmbed],
+            ephemeral: true
+        })
     }
 };
