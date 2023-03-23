@@ -4,6 +4,7 @@ const { saveSetting } = require('../Api/database.js');
 module.exports = {
   name: 'unbanModal',
   async execute(interaction) {
+    await interaction.deferReply();
     const logChan = interaction.options.getChannel('logchan');
     const appChan = interaction.options.getChannel('appchan');
     const modChan = interaction.options.getChannel('modalchan');

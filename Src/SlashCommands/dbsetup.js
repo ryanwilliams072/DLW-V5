@@ -30,16 +30,14 @@ module.exports = {
         if (module === 'db') {
             await saveSetting('datastoreApiKey', dbkey);
 
-            return await interaction.reply({
-                content: `Datastore API key set to ${dbkey}`,
+            interaction.reply({
                 embeds: [saveSetting],
                 ephemeral: true
             });
         } else if (module === 'logchan'){
             await saveSetting('logChannelID', dbkey);
 
-            return await interaction.reply({
-                content: `Log channel set to ${dbkey}`,
+            interaction.reply({
                 embeds: [saveSetting],
                 ephemeral: true
             });

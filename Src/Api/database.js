@@ -27,7 +27,7 @@ const saveSetting = async (settingName, settingValue) => {
         existingSetting.id = settingValue;
         await db.set('settings', settings);
 
-        const universeEmbed = new EmbedBuilder()
+        const overwriteEmbed = new EmbedBuilder()
             .setTitle('Setting Overwritten')
             .setDescription(`Overwrote **${settingName}** in the database`)
             .setColor('#2f3136')
@@ -37,7 +37,7 @@ const saveSetting = async (settingName, settingValue) => {
             )
             .setTimestamp();
 
-        return universeEmbed;
+        return overwriteEmbed;
     } else {
         settings[settingName] = { name: settingName, id: settingValue };
         await db.set('settings', settings);
