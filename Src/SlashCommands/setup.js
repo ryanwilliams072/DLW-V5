@@ -28,7 +28,7 @@ module.exports = {
             const modChan = interaction.options.getChannel('modalchan');
         
             if (logChan || appChan || modChan) {
-                await interaction.reply({content: 'Please wait while I set up the bot for your server...', ephemeral: true});
+                await interaction.deferReply();
                 await unbanModal.execute(interaction);
             } else {
                 console.log('No channel was provided');
@@ -36,7 +36,6 @@ module.exports = {
             }
         } catch(err) {
             console.log(err);
-            interaction.reply({content: 'An error occurred while trying to get the channels from your request.', ephemeral: true});
         }
     }
 }

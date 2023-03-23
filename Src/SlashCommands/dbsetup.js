@@ -44,8 +44,6 @@ module.exports = {
                 ephemeral: true
             });
         }
-        await interaction.reply({
-            content: `Failed to set ${module}`
-        });
+        return console.log('Error: No module selected');
     }
 };
