@@ -39,7 +39,7 @@ const saveSetting = async (settingName, settingValue) => {
 
         return universeEmbed;
     } else {
-        settings[settingValue] = { name: settingName, id: settingValue };
+        settings[settingName] = { name: settingName, id: settingValue };
         await db.set('settings', settings);
 
         const universeEmbed = new EmbedBuilder()
