@@ -36,7 +36,7 @@ module.exports = {
             return console.log('Error: No module selected');
         }
 
-        interaction.reply({
+        await interaction.reply({
             embeds: [settingEmbed],
             ephemeral: true
         });
