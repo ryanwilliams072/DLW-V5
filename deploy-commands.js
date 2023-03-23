@@ -26,7 +26,6 @@ const customToJSON = (obj) => {
 // Grab the SlashCommand output of each command
 for (const file of commandFiles) {
     const command = require(`./Src/SlashCommands/${file}`);
-    console.log(`${file}`);
     commands.push(JSON.parse(customToJSON(command.data)));
 }
 
