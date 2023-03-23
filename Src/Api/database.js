@@ -32,8 +32,8 @@ const saveSetting = async (settingName, settingValue) => {
             .setDescription(`Overwrote **${settingName}** in the database`)
             .setColor('#2f3136')
             .addFields(
-                { name: 'Setting', value: settingName, inline: true },
-                { name: 'New Value', value: settingValue, inline: true },
+                { name: 'Setting', value: settingName },
+                { name: 'New Value', value: settingValue },
             )
             .setTimestamp();
 
@@ -47,8 +47,8 @@ const saveSetting = async (settingName, settingValue) => {
             .setDescription(`Added **${settingName}** to the database`)
             .setColor('#2f3136')
             .addFields(
-                { name: 'Setting', value: settingName, inline: true },
-                { name: 'Value', value: settingValue, inline: true },
+                { name: 'Setting', value: settingName },
+                { name: 'Value', value: settingValue },
             )
             .setTimestamp();
 
