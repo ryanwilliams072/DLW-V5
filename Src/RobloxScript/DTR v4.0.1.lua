@@ -179,8 +179,6 @@ local function initMsgServ()
 
 			elseif (msg.Data.Reason == "Response" and (msg.Data.To == game.JobId)) then
 				dataCalls += 1;
-			elseif (msg.Data.group) then
-				return;
 			else
 				warn("Msg | ", msg);
 				warn("msgData | ", msg.data);

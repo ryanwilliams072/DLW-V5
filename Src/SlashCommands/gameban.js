@@ -17,8 +17,7 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                     { name: 'Username', value: 'username' },
-                    { name: 'User ID', value: 'userid'},
-                    { name: 'Group ID', value: 'groupid'}
+                    { name: 'User ID', value: 'userid'}
                 ))
         .addStringOption(option =>
             option.setName('input')
@@ -85,113 +84,6 @@ module.exports = {
             return interaction.reply({ embeds: [embed] });
         }
         try {
-            if (userOrID === 'groupid') {
-                console.log("GROUP ID " + userToBan)
-                const groupData = await getGroupInfo(userToBan);
-
-                if (groupData) {
-                    let groupID = userToBan;
-                    const groupName = groupData['data'][0]['name'];
-                    
-                    const confirmEmbed = new EmbedBuilder()
-                        .setColor('#2f3136')
-                        .setTitle('⚠️ Confirm Group Ban ⚠️')
-                        .setDescription(`Are you sure you want to ban the Group: **${groupName} **?\n\nReason:\n**${reason}**`)
-                        .setTimestamp()
-
-                    const message = await interaction.reply ({ embeds: [confirmEmbed], fetchReply: true });
-
-                    await message.react('✔️');
-                    await message.react('❌');
-
-                    const filter = (reaction, user) => {
-                        return ['✔️', '❌'].includes(reaction.emoji.name) && user.id === interaction.user.id;
-                    };
-
-                    message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] })
-                        .then(async collected => {
-                            const reaction = collected.first();
-
-                            if (reaction.emoji.name === '✔️') {
-                                if (message.reactions.cache.size > 0) {
-                                    message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                                }
-
-                                try {
-                                    const data = await handleMessageServiceAPI(userToBan, 'DTR', universeID);
-                                    const color = data.status == 200 ? '#76da90' : '#ec7168';
-
-                                    const embed = new EmbedBuilder()
-                                        .setColor(color)
-                                        .setTitle('🚫 Group Banned')
-                                        .setDescription(`**${groupName}** has been banned from **${universeID}**\n\nReason:\n**${reason}**`)
-                                        .setTimestamp()
-
-                                    const logEmbed = new EmbedBuilder()
-                                        .setColor('#76da90')
-                                        .setTitle('🚫 Group Banned')
-                                        .setDescription(`**${groupName}** has been banned from **${universeID}**\n\nReason:\n**${reason}**`)
-                                        .setTimestamp()
-
-                                    if (message) {
-                                        message.edit({ embeds : [embed] })
-                                        if (logChan) {
-                                            logChan.send({ embeds: [logEmbed] });
-                                        } else {
-                                            console.log('Make sure to set a log channel!');
-                                        }
-                                    } else {
-                                        return console.error('No message found!');
-                                    }
-                                } catch (error) {
-                                    return console.error('Failed to ban group: ', error);
-                                }
-                            } else {
-                                if (message.reactions.cache.size > 0) {
-                                    message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                                }
-                                const newEmbed = {
-                                    title: '🚫 Group Ban Cancelled',
-                                    color: parseInt('00ff44', 16),
-                                    fields: [
-                                        { name: 'Group Ban Cancelled', value: `**${groupName} **has not been banned from **${universeID}**` }
-                                    ]
-                                };
-                                await message.edit({ embeds: [newEmbed] });
-                            }
-                        })
-                        .catch(error => {
-                            if (error instanceof Collection) {
-                                if (message.reactions.cache.size > 0) {
-                                    message.reactions.removeAll().catch(error => console.error('Failed to clear reactions: ', error));
-                                }
-                                const timeout = {
-                                    title: '🚫 Group Ban Cancelled',
-                                    color: parseInt('00ff44', 16),
-                                    fields: [
-                                        { name: 'Group Ban Cancelled', value: `**${groupName} **has not been banned from **${universeID}**` }
-                                    ]
-                                };
-                                message.edit({ embeds: [timeout] });
-                            } else {
-                                console.error(`Error awaiting reactions: ${error}`);
-                                interaction.followUp({ content: `Error awaiting reactions: ${error}` })
-                            }
-                        });
-                } else {
-                    const prettyEmbed = new EmbedBuilder()
-                        .setColor('#ec7168')
-                        .setTitle('🚫 Error')
-                        .setDescription(`Failed to find group with ID: ${userToBan}`)
-                        .setTimestamp()
-
-                    await interaction.reply({
-                        embeds: [prettyEmbed],
-                        ephemeral: true
-                    })
-                }
-                return;
-            }
             const robloxData = await checkName(userToBan, userOrID);
 
             if (robloxData.id) {
