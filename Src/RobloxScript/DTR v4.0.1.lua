@@ -17,7 +17,6 @@ local MessagingService = game:GetService("MessagingService")
 
 -- // Variables
 local MainStore = DataStoreService:GetDataStore("DTRD")
-local groupStore = DataStoreService:GetDataStore("Group")
 local Enabled = false;
 local dataCalls = 0;
 
