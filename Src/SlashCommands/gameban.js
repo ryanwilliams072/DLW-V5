@@ -1,5 +1,5 @@
 const { Collection, EmbedBuilder, SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { checkName, getAvatarUrl, getGroupInfo, handleDatastoreAPI, handleMessageServiceAPI } = require('../Api/datastoreHandler.js');
+const { checkName, getAvatarUrl, handleDatastoreAPI } = require('../Api/datastoreHandler.js');
 const { getDataKey, returnUniverses } = require('../Api/database.js');
 
 module.exports = {

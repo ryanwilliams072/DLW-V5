@@ -68,13 +68,6 @@ async function getAvatarUrl (userId) {
   return avatarUrl;
 };
 
-async function getGroupInfo (groupId) {
-  const robloxResponse = await axios.get(`https://groups.roblox.com/v2/groups?groupIds=${groupId}`);
-  const groupInfo = robloxResponse.data;
-
-  return groupInfo;
-}
-
 async function handleMessageServiceAPI(message, topic, universeID) { // pass through the group ?
   let payload = {
       group: message, // i want to give the payload a different name, but what?
@@ -110,4 +103,4 @@ async function handleMessageServiceAPI(message, topic, universeID) { // pass thr
   }
 }
 
-module.exports = { checkName, getAvatarUrl, getGroupInfo, handleDatastoreAPI, handleMessageServiceAPI };
+module.exports = { checkName, getAvatarUrl, handleDatastoreAPI, handleMessageServiceAPI };
