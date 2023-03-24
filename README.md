@@ -12,6 +12,16 @@ Make sure to follow the tutorial on DevForum found [here](https://devforum.roblo
 
 `universeID` - [Click your game, universeID in link](https://create.roblox.com/creations)
 
+# How to use this?
+**Unban Appeal System + Chat Commands**
+`/setup <logChan> <appChan> <modChan>` Setup your logging channel, application results channel, and unban appeal button
+`/dbsetup Datastore <key>` Setup your datastore key
+`/dbadd <Name of your Server> <universeID>` And you're all set to go!
+
+**Chat Commands**
+`/dbsetup Datastore <key>` Setup your datastore key
+`/dbadd <Name of your Server> <universeID>` And you're all set to go!
+
 Please report any uncaught errors in `Issues`.
 
 Support me and help fund other projects by donating via CashApp: `$kinqeli21`
