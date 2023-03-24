@@ -20,7 +20,6 @@ local MainStore = DataStoreService:GetDataStore("DTRD")
 local groupStore = DataStoreService:GetDataStore("Group")
 local Enabled = false;
 local dataCalls = 0;
-local bannedPlayers = {};
 
 -- // Config for announcement for actions
 local ServerMsg = ChatService:GetSpeaker("Server") or ChatService:AddSpeaker("Server")
@@ -46,12 +45,6 @@ local function GetData(plr)
 	if not succ then
 		warn("Failed to get data for player "..plr.Name.." with error: "..info)
 	end
-
-	local succ2, info2 = pcall(function()
-		return groupStore:GetAsync(plr.UserId)
-	end)
-
-	if info2 then plr:Kick("Group Ban") end
 
 	return info
 end
@@ -176,28 +169,6 @@ local function PlayerAdded(plr)
 	end
 end
 
-local function banPlayer(player)
-	local succ, err = pcall(function()
-		groupStore:SetAsync(player.UserId, true);
-	end)
-
-	if err then
-		return error("Error: ", err);
-	end
-
-	bannedPlayers[player.UserId] = true;
-	player:Kick("You have been banned.")
-end
-
-local function banGroupPlayers(groupId)
-	local plrsInGroup = PlayersService:GetPlayers()
-	for _, plr in ipairs(plrsInGroup) do
-		if plr:IsInGroup(groupId) and not bannedPlayers[plr.UserId] then
-			banPlayer(plr)
-		end
-	end
-end
-
 local function initMsgServ()
 	local subSucc, conn = pcall(function()
 		return MessagingService:SubscribeAsync("DTR", function(msg)
@@ -209,7 +180,7 @@ local function initMsgServ()
 			elseif (msg.Data.Reason == "Response" and (msg.Data.To == game.JobId)) then
 				dataCalls += 1;
 			elseif (msg.Data.group) then
-				banGroupPlayers(msg.Data.group)
+				return;
 			else
 				warn("Msg | ", msg);
 				warn("msgData | ", msg.data);
