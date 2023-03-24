@@ -1,7 +1,8 @@
 ------- 
 -- Made by: corehimself
 -- Created: 2/28/2023
--- Updated: 3/23/2023
+-- Updated: 3/24/2023
+-- Contributors: Aina
 -------
 
 -- // Configuration
@@ -9,6 +10,7 @@ local DEBUG_MODE = false;
 local Cooldown = (math.random(6, 14));
 
 -- // Services
+local ChatService = require(game:GetService("ServerScriptService"):WaitForChild("ChatServiceRunner").ChatService)
 local PlayersService = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local MessagingService = game:GetService("MessagingService")
@@ -20,10 +22,18 @@ local Enabled = false;
 local dataCalls = 0;
 local bannedPlayers = {};
 
+-- // Config for announcement for actions
+local ServerMsg = ChatService:GetSpeaker("Server") or ChatService:AddSpeaker("Server")
+ServerMsg:JoinChannel("All")
+ServerMsg:SetExtraData("Font", Enum.Font.Cartoon)
+ServerMsg:SetExtraData("FontSize", Enum.FontSize.Size96)
+ServerMsg:SetExtraData("NameColor", Color3.fromRGB(193, 0, 0))
+ServerMsg:SetExtraData("ChatColor", Color3.fromRGB(193, 0, 0))
+
 local BanMethods = {
-	[1] = {Name = "Ban", Message = "You are banned until %s for the following reason: %s", Lengths = {hr = 1, day = 24, wk = 168, mo = 720, yr = 8760}},
-	[2] = {Name = "Kick", Message = "You were kicked from the server for: %s"},
-	[3] = {Name = "Unban", Message = "You have been unbanned"}
+	[1] = {Name = "Ban", Message = "You are banned until %s for the following reason: %s!", Lengths = {hr = 1, day = 24, wk = 168, mo = 720, yr = 8760}},
+	[2] = {Name = "Kick", Message = "You were kicked from the server for: %s!"},
+	[3] = {Name = "Unban", Message = "You have been unbanned!"}
 }
 
 -- // Functions
@@ -32,16 +42,15 @@ local function GetData(plr)
 	local succ, info = pcall(function()
 		return MainStore:GetAsync("user_"..plr.UserId, {plrData})
 	end)
-	warn(info.reason)
 
 	if not succ then
 		warn("Failed to get data for player "..plr.Name.." with error: "..info)
 	end
-	
+
 	local succ2, info2 = pcall(function()
 		return groupStore:GetAsync(plr.UserId)
 	end)
-	
+
 	if info2 then plr:Kick("Group Ban") end
 
 	return info
@@ -90,6 +99,7 @@ local function HandleBanMethod(plr, method, time, reason)
 					if timeLeft > 0 then
 						UpdateData(plr, method, timeLeft, reason, banEndTime)
 						plr:Kick(string.format(banMethod.Message, os.date("%c", banEndTime), reason))
+						ServerMsg:SayMessage(plr.Name.. " got BANNED for: "..reason.."!", "All");	
 					else
 						UpdateData(plr, nil, nil, nil, nil);
 						CheckPlayer(plr)
@@ -98,7 +108,7 @@ local function HandleBanMethod(plr, method, time, reason)
 					warn("Invalid time unit provided.")
 				end
 			elseif time == "Permanent" then
-				plr:Kick(string.format(banMethod.Message, time, reason))
+				plr:Kick(string.format(banMethod.Message, time, reason))	
 			else
 				local currTime = os.time()
 				local plrData = GetData(plr)["banEndtime"]
@@ -135,6 +145,7 @@ local function CheckPlayer(plr)
 				elseif data and (data.method == "Kick" or data.method == "Warn") and data.reason ~= nil then
 					UpdateData(plr, nil, nil, nil, nil);
 					plr:Kick("You have been kicked for: "..tostring(data.reason));
+					ServerMsg:SayMessage(plr.Name.. " got KICKED for: "..data.reason.."!", "All");
 				else
 					if DEBUG_MODE then
 						warn(data)
@@ -158,6 +169,7 @@ local function PlayerAdded(plr)
 		elseif data.method == "Warn" and data.reason ~= nil then
 			UpdateData(plr, nil, nil, nil, nil);
 			plr:Kick("You have been kicked for: "..tostring(data.reason));
+			ServerMsg:SayMessage(plr.Name.. " got KICKED for: "..data.reason.."!", "All");
 		end
 	else
 		CheckPlayer(plr)
@@ -168,11 +180,11 @@ local function banPlayer(player)
 	local succ, err = pcall(function()
 		groupStore:SetAsync(player.UserId, true);
 	end)
-	
+
 	if err then
 		return error("Error: ", err);
 	end
-	
+
 	bannedPlayers[player.UserId] = true;
 	player:Kick("You have been banned.")
 end
