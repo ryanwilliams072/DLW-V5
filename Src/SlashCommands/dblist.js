@@ -19,17 +19,16 @@ module.exports = {
         // list all the databases
         const db = await getDb();
 
+        let universes;
         if (module === 'uni') {
-            const universes = await listUniverses(db);
-            return await interaction.reply({
-                embeds: [universes],
-            });
+            universes = await listUniverses(db);
         } else if (module === 'setti') {
-            const settings = await listSettings(db);
-            return await interaction.reply({
-                embeds: [settings],
-                ephemeral: true,
-            });
+            universes = await listSettings(db);
         }
+
+        await interaction.reply({
+            embeds: [universes],
+            ephemeral: true
+        });
     }
 };

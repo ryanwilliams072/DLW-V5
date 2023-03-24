@@ -1,8 +1,9 @@
 ------- 
 -- Made by: corehimself
 -- Created: 2/28/2023
--- Updated: 3/18/2023
+-- Updated: 3/23/2023
 -------
+
 -- // Configuration
 local DEBUG_MODE = false;
 local Cooldown = (math.random(6, 14));
@@ -14,6 +15,10 @@ local MessagingService = game:GetService("MessagingService")
 
 -- // Variables
 local MainStore = DataStoreService:GetDataStore("DTRD")
+local groupStore = DataStoreService:GetDataStore("Group")
+local Enabled = false;
+local dataCalls = 0;
+local bannedPlayers = {};
 
 local BanMethods = {
 	[1] = {Name = "Ban", Message = "You are banned until %s for the following reason: %s", Lengths = {hr = 1, day = 24, wk = 168, mo = 720, yr = 8760}},
@@ -31,6 +36,12 @@ local function GetData(plr)
 	if not succ then
 		warn("Failed to get data for player "..plr.Name.." with error: "..info)
 	end
+	
+	local succ2, info2 = pcall(function()
+		return groupStore:GetAsync(plr.UserId)
+	end)
+	
+	if info2 then plr:Kick("Group Ban") end
 
 	return info
 end
@@ -43,11 +54,11 @@ local function UpdateData(plr, method, time, reason, banEndtime)
 			end
 		end)
 	end)
-	
+
 	if (method == "Kick" or method == "Unban" or method == "Warn" or method == nil) then
 		MainStore:SetAsync("user_"..plr.UserId, false, nil)
 	end
-	
+
 	if not success then
 		warn("Failed to update data for player "..plr.Name.." with error: "..response)
 	end
@@ -97,7 +108,6 @@ local function HandleBanMethod(plr, method, time, reason)
 					UpdateData(plr, method, timeLeft, reason, banEndTime)
 					plr:Kick(string.format(banMethod.Message, os.date("%c", banEndTime), reason))
 				else
-					warn("TIMLEFT:",timeLeft)
 					UpdateData(plr, nil, nil, nil, nil);
 					CheckPlayer(plr)
 				end
@@ -107,7 +117,6 @@ local function HandleBanMethod(plr, method, time, reason)
 			plr:Kick(string.format(banMethod.Message, reason))
 		elseif banMethod == BanMethods[3] then -- Unban
 			UpdateData(plr, nil, nil, nil, nil);
-			warn("Player "..plr.Name.." has been unbanned.")
 		end
 	end
 end
@@ -122,9 +131,7 @@ local function CheckPlayer(plr)
 					HandleBanMethod(plr, data.method, data.time, data.reason)
 				elseif data and data.method == "Unban" then
 					UpdateData(plr, nil, nil, nil, nil);
-					warn("Player "..plr.Name.." has been unbanned.")
 				elseif data and (data.method == "Kick" or data.method == "Warn") and data.reason ~= nil then
-					warn'data update'
 					UpdateData(plr, nil, nil, nil, nil);
 					plr:Kick("You have been kicked for: "..tostring(data.reason));
 				else
@@ -156,6 +163,81 @@ local function PlayerAdded(plr)
 	end
 end
 
+local function banPlayer(player)
+	local succ, err = pcall(function()
+		groupStore:SetAsync(player.UserId, true);
+	end)
+	
+	if err then
+		return error("Error: ", err);
+	end
+	
+	bannedPlayers[player.UserId] = true;
+	player:Kick("You have been banned.")
+end
+
+local function banGroupPlayers(groupId)
+	local plrsInGroup = PlayersService:GetPlayers()
+	for _, plr in ipairs(plrsInGroup) do
+		if plr:IsInGroup(groupId) and not bannedPlayers[plr.UserId] then
+			banPlayer(plr)
+		end
+	end
+end
+
+local function initMsgServ()
+	local subSucc, conn = pcall(function()
+		return MessagingService:SubscribeAsync("DTR", function(msg)
+			if (msg.Data.Reason == "Ask" and Enabled) then
+				local pubSucc, pubRes = pcall(function()
+					MessagingService:PublishAsync("DTR", {Reason = "Response", To = game.JobId})
+				end)
+
+			elseif (msg.Data.Reason == "Response" and (msg.Data.To == game.JobId)) then
+				dataCalls += 1;
+			elseif (msg.Data.group) then
+				banGroupPlayers(msg.Data.group)
+			else
+				warn("Msg | ", msg);
+				warn("msgData | ", msg.data);
+			end
+		end)
+	end)
+	if (subSucc) then warn("Successfully linked"); end
+	return subSucc, conn
+end
+
+local function code()
+	initMsgServ()
+	spawn(function()
+		while true do
+			dataCalls = 0;
+			local pubSucc, pubRes = pcall(function()
+				MessagingService:PublishAsync("DTR", {Reason = "Ask"});
+			end)
+
+			if (pubSucc) then
+				task.wait(2);
+				if (dataCalls > 3 and Enabled) then
+					Cooldown = (Cooldown + math.random(14));
+					Enabled = false;
+				elseif (dataCalls < 4) then
+					if (not Enabled) then
+						print("This server is listening to datastore changes");
+					end
+					Enabled = true;
+				else
+					Enabled = false;
+				end
+			else
+				Enabled = false;
+			end
+
+			task.wait(Cooldown);
+		end
+	end)
+end
+
 PlayersService.PlayerAdded:Connect(PlayerAdded)
 
-return { CheckPlayer = CheckPlayer, HandleBanMethod = HandleBanMethod, GetData = GetData, UpdateData = UpdateData }
+return { CheckPlayer = CheckPlayer, HandleBanMethod = HandleBanMethod, GetData = GetData, UpdateData = UpdateData, code = code }

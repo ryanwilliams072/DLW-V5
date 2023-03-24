@@ -21,30 +21,21 @@ module.exports = {
     async execute(interaction) {
         const module = interaction.options.getString('module');
         const uniInput = interaction.options.getString('input');
-
         if (!uniInput) {
             await interaction.reply('You must specify');
             return;
         }
         const db = await setupDatabase();
+        let toRemove;
         if (module === 'uni') {
-            const toRemove = await removeUniverse(db, uniInput);
-
-            await interaction.reply({
-                embeds: [toRemove],
-            })
-            return;
+            toRemove = await removeUniverse(db, uniInput);
         } else if (module === 'setti'){
-            const toRemove = await removeSetting(db, uniInput);
-
-            await interaction.reply({
-                embeds: [toRemove],
-            })
-            return;
+            toRemove = await removeSetting(db, uniInput);
         }
 
         await interaction.reply({
-            content: `Failed to remove ${module}`
+            embeds: [toRemove],
+            ephemeral: true
         })
     }
 };

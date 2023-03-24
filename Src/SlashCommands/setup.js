@@ -28,7 +28,6 @@ module.exports = {
             const modChan = interaction.options.getChannel('modalchan');
         
             if (logChan || appChan || modChan) {
-                //await interaction.deferReply();
                 await unbanModal.execute(interaction);
             } else {
                 console.log('No channel was provided');

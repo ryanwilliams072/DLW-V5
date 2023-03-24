@@ -4,13 +4,11 @@ Make sure to follow the tutorial on DevForum found [here](https://devforum.roblo
 
 `botToken` - Your Discord Bot Token Here
 
-[Image Example](https://i.imgur.com/vNdAwg5.png)
-
-`datastoreApiKey` Your Datastore Api Key
-
 `clientId` - Your Discord Bot Client ID
 
 `guildId` - Your Discord Guild ID
+
+`datastoreApiKey` Your Datastore Api Key
 
 `universeID` - [Click your game, universeID in link](https://create.roblox.com/creations)
 
@@ -19,6 +17,6 @@ Please report any uncaught errors in `Issues`.
 Support me and help fund other projects by donating via CashApp: `$kinqeli21`
 
 **Contact Information**
-The quickest way to contact me is through [discord](https://discord.com/invite/RuK6c5zx)
+The quickest way to contact me is through [discord](https://discord.com/invite/9FhNbK3nck)
 
 **Made by** [corehimself](https://www.roblox.com/users/2731068564/profile)

@@ -87,7 +87,7 @@ module.exports = {
         try {
             if (userOrID === 'groupid') {
                 console.log("GROUP ID " + userToBan)
-                const groupData = await getGroupInfo(userToBan); // https://groups.roblox.com/v2/groups?groupIds=
+                const groupData = await getGroupInfo(userToBan);
 
                 if (groupData) {
                     let groupID = userToBan;
