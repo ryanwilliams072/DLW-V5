@@ -42,7 +42,7 @@ module.exports = {
     },
     async execute(interaction) {
         const logID = await getDataKey('logChannelID');
-        const logChan = await client.channels.fetch(logID);
+        const logChan = interaction.guild.channels.cache.get(logID)
         const serverID = interaction.options.getString('server');
         const userOrID = interaction.options.getString('category');
         const userToWarn = interaction.options.getString('userorid');
