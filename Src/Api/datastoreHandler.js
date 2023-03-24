@@ -12,7 +12,10 @@ async function handleDatastoreAPI(entryKey, data, universeID) {
     }
     return;
   }
-  let datastoreApiKey = await getDataKey('datastoreApiKey');
+  const datastoreApiKey = await getDataKey('datastoreApiKey');
+  console.log("Datastore API Key: " + datastoreApiKey);
+  console.log("Datastore Entry Key: " + entryKey);
+  console.log("Datastore Data: " + data);
   const JSONValue = JSON.stringify(data);
   const contentMD5 = crypto.createHash("md5").update(JSONValue).digest("base64");
 
