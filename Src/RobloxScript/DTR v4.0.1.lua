@@ -31,21 +31,20 @@ ServerMsg:SetExtraData("ChatColor", Color3.fromRGB(193, 0, 0))
 local BanMethods = {
 	[1] = {Name = "Ban", Message = "You are banned until %s for the following reason: %s!", Lengths = {hr = 1, day = 24, wk = 168, mo = 720, yr = 8760}},
 	[2] = {Name = "Kick", Message = "You were kicked from the server for: %s!"},
-	[3] = {Name = "Unban", Message = "You have been unbanned!"}
-}
+	[3] = {Name = "Unban", Message = "You have been unbanned!"},
+};
 
--- // Functions
 local function GetData(plr)
-	local plrData = {};
-	local succ, info = pcall(function()
-		return MainStore:GetAsync("user_"..plr.UserId, {plrData})
+	local plrData;
+	local success, info = pcall(function()
+		plrData = MainStore:GetAsync("user_"..plr.UserId, {})
 	end)
-
-	if not succ then
+	
+	if not success then
 		warn("Failed to get data for player "..plr.Name.." with error: "..info)
 	end
 
-	return info
+	return info or {}
 end
 
 local function UpdateData(plr, method, time, reason, banEndtime)
@@ -57,87 +56,93 @@ local function UpdateData(plr, method, time, reason, banEndtime)
 		end)
 	end)
 
-	if (method == "Kick" or method == "Unban" or method == "Warn" or method == nil) then
+	if success and (method ~= "Ban" or (method == "Ban" and time == nil)) then
 		MainStore:SetAsync("user_"..plr.UserId, false, nil)
 	end
 
 	if not success then
 		warn("Failed to update data for player "..plr.Name.." with error: "..response)
 	end
-	return success
 end
 
+-- // method-to-index dictionary table
+local BanMethodIndices = {}
+for i, info in ipairs(BanMethods) do
+    BanMethodIndices[info.Name] = i
+end
+
+-- // Improved HandleBanMethod function
 local function HandleBanMethod(plr, method, time, reason)
-	local banMethod = nil
-	for _, info in ipairs(BanMethods) do
-		if info.Name == method then
-			banMethod = info
-			break
-		end
-	end
+    local banMethodIndex = BanMethodIndices[method]
+    local banMethod = BanMethods[banMethodIndex]
+    
+    if banMethod == nil then
+        warn("Invalid ban method provided.")
+        return
+    end
+    
+    local banMessage = banMethod.Message
+    
+    local currTime = os.time
+    local date = os.date
+    
+    if banMethod == BanMethods[1] then -- Ban
+        local timeLength, timeUnit = string.match(time, "(%d+)(%a+)")
+        timeLength = tonumber(timeLength)
+        
+        if time ~= "Permanent" and (timeLength == nil or timeUnit == nil or banMethod.Lengths[timeUnit] == nil) then
+            warn("Invalid ban time provided.")
+            return
+        end
+        
+        local banDuration = (time == "Permanent") and -1 or (timeLength * banMethod.Lengths[timeUnit] * 3600)
+        local banEndTime = (banDuration >= 0) and (currTime() + banDuration) or math.huge
+        local timeLeft = tonumber(banEndTime - currTime())
+        
+        if timeLeft > 0 and UpdateData(plr, method, timeLeft, reason, banEndTime) then
+            plr:Kick(string.format(banMessage, date("%c", banEndTime), reason))
+            ServerMsg:SayMessage(string.format("%s got BANNED for: %s!", plr.Name, reason), "All")
+        elseif timeLeft <= 0 then
+            UpdateData(plr, nil, nil, nil, nil)
+            CheckPlayer(plr)
+        end
+    elseif UpdateData(plr, method, nil, reason, nil) then
+        if banMethod == BanMethods[2] then -- Kick
+            plr:Kick(string.format(banMessage, reason))
+        elseif banMethod == BanMethods[3] then -- Unban
+            UpdateData(plr, nil, nil, nil, nil)
+        end
+    end
+end
 
-	if banMethod ~= nil then
-		if banMethod == BanMethods[1] then -- Ban
-			local timeLength, timeUnit = string.match(time, "(%d+)(%a+)")
-			timeLength = tonumber(timeLength)
-			if timeLength and timeUnit then
-				local lengthInHours = banMethod.Lengths[timeUnit]
-				if lengthInHours then
-					local banDuration = (timeLength * lengthInHours * 3600)
-					local banEndTime = os.time() + banDuration
-					local currTime = os.time()
-					local timeLeft = tonumber(banEndTime - currTime)
+local debounceTable = {}
 
-					if timeLeft > 0 then
-						UpdateData(plr, method, timeLeft, reason, banEndTime)
-						plr:Kick(string.format(banMethod.Message, os.date("%c", banEndTime), reason))
-						ServerMsg:SayMessage(plr.Name.. " got BANNED for: "..reason.."!", "All");	
-					else
-						UpdateData(plr, nil, nil, nil, nil);
-						CheckPlayer(plr)
-					end
-				else
-					warn("Invalid time unit provided.")
-				end
-			elseif time == "Permanent" then
-				plr:Kick(string.format(banMethod.Message, time, reason))	
-			else
-				local currTime = os.time()
-				local plrData = GetData(plr)["banEndtime"]
-				local banEndTime = plrData
-				local timeLeft = (tonumber(banEndTime - currTime))
-
-				if timeLeft > 0 then
-					UpdateData(plr, method, timeLeft, reason, banEndTime)
-					plr:Kick(string.format(banMethod.Message, os.date("%c", banEndTime), reason))
-				else
-					UpdateData(plr, nil, nil, nil, nil);
-					CheckPlayer(plr)
-				end
-
-			end
-		elseif banMethod == BanMethods[2] then -- Kick
-			plr:Kick(string.format(banMethod.Message, reason))
-		elseif banMethod == BanMethods[3] then -- Unban
-			UpdateData(plr, nil, nil, nil, nil);
-		end
-	end
+function debounce(key, callback, cooldown)
+    cooldown = cooldown or 0.3
+    if debounceTable[key] == nil then
+        debounceTable[key] = true
+        callback()
+        spawn(function()
+            wait(cooldown)
+            debounceTable[key] = nil
+        end)
+    end
 end
 
 local function CheckPlayer(plr)
 	spawn(function()
 		while task.wait(Cooldown) do
-			if plr then
+			if plr and next(GetData(plr)) ~= nil then
 				local data = GetData(plr)
-
-				if type(data) == "table" and data.method ~= nil and data.time ~= nil and data.reason ~= nil then
+	
+				if data.method ~= nil and data.time ~= nil and data.reason ~= nil then
 					HandleBanMethod(plr, data.method, data.time, data.reason)
-				elseif data and data.method == "Unban" then
-					UpdateData(plr, nil, nil, nil, nil);
-				elseif data and (data.method == "Kick" or data.method == "Warn") and data.reason ~= nil then
-					UpdateData(plr, nil, nil, nil, nil);
-					plr:Kick("You have been kicked for: "..tostring(data.reason));
-					ServerMsg:SayMessage(plr.Name.. " got KICKED for: "..data.reason.."!", "All");
+				elseif data.method == "Unban" then
+					UpdateData(plr, nil, nil, nil, nil)
+				elseif (data.method == "Kick" or data.method == "Warn") and data.reason ~= nil then
+					UpdateData(plr, nil, nil, nil, nil)
+					plr:Kick(string.format("You have been kicked for: %s", data.reason))
+					ServerMsg:SayMessage(string.format("%s got KICKED for: %s!", plr.Name, data.reason), "All")
 				else
 					if DEBUG_MODE then
 						warn(data)
@@ -147,21 +152,22 @@ local function CheckPlayer(plr)
 		end
 	end)
 end
-
--- // Init
+	
 local function PlayerAdded(plr)
 	local data = GetData(plr)
 
-	if type(data) == "table" then
+	if next(data) ~= nil then
 		if data.method ~= nil and data.time ~= nil then
 			HandleBanMethod(plr, data.method, data.time, data.reason)
 		elseif data.method == "Unban" or data.method == "Kick" then
-			UpdateData(plr, nil, nil, nil, nil);
-			CheckPlayer(plr)
+			UpdateData(plr, nil, nil, nil, nil)
+			debounce(plr.UserId, function()
+				CheckPlayer(plr)
+			end)
 		elseif data.method == "Warn" and data.reason ~= nil then
-			UpdateData(plr, nil, nil, nil, nil);
-			plr:Kick("You have been kicked for: "..tostring(data.reason));
-			ServerMsg:SayMessage(plr.Name.. " got KICKED for: "..data.reason.."!", "All");
+			UpdateData(plr, nil, nil, nil, nil)
+			plr:Kick(string.format("You have been kicked for: %s", data.reason))
+			ServerMsg:SayMessage(string.format("%s got KICKED for: %s!", plr.Name, data.reason), "All")
 		end
 	else
 		CheckPlayer(plr)
@@ -175,7 +181,6 @@ local function initMsgServ()
 				local pubSucc, pubRes = pcall(function()
 					MessagingService:PublishAsync("DTR", {Reason = "Response", To = game.JobId})
 				end)
-
 			elseif (msg.Data.Reason == "Response" and (msg.Data.To == game.JobId)) then
 				dataCalls += 1;
 			else

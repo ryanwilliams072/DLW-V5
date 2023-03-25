@@ -50,8 +50,8 @@ async function checkName(userToCheck, userOrID) {
   try {
     const response = await axios.post(baseURL, body);
     const returnedData = response.data.data[0];
-
     if (returnedData.id !== undefined) {
+      
       return {id: returnedData.id, name: returnedData.name};
     } else {
       return false;
@@ -103,4 +103,27 @@ async function handleMessageServiceAPI(message, topic, universeID) { // pass thr
   }
 }
 
-module.exports = { checkName, getAvatarUrl, handleDatastoreAPI, handleMessageServiceAPI };
+async function listEntries(universeID) {
+  const datastoreApiKey = await getDataKey('datastoreApiKey');
+  try {
+    const response = await axios.get(`https://apis.roblox.com/datastores/v1/universes/${universeID}/standard-datastores/datastore/entries`, {
+      params: {
+        'datastoreName': 'DTRD',
+        'AllScopes': 'true',
+        'limit': '5'
+      },
+      headers: {
+        'x-api-key': datastoreApiKey
+      }
+    }).catch(err => {
+      console.log("Error: " + err.response);
+    })
+    if (response){
+      return response.data;
+    }
+  } catch (err) {
+    console.log("Err: " + err);
+  }
+}
+
+module.exports = { checkName, getAvatarUrl, handleDatastoreAPI, handleMessageServiceAPI, listEntries };
