@@ -34,9 +34,9 @@ https://github.com/corehimself/DTR-V4/assets/125627389/90cb437c-3548-4ce0-b13d-1
 7) Run the following commands on terminal/cmd
 ``node i`` then ``node main.js``
 
-9) **DOWNLOAD THE MODEL FROM RELEASES OR THE MODEL** -> Place the Server Script into `ServerScriptService`, Place the Client into `StarterPlayerScripts` and ensure `Enable HTTP Requests` is Enabled!
+9) **DOWNLOAD THE MODEL FROM RELEASES OR THE MODEL** -> Place the Server Script into `ServerScriptService`, Place the Client into `ReplicatedFirst` and ensure `Enable HTTP Requests` is Enabled!
 
-[Want the model instead?](https://www.roblox.com/library/14160690168/)
+[Download the model](https://www.roblox.com/library/14160690168/)
 
 ## How to set it up?
 ### **Settings**
